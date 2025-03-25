@@ -89,11 +89,25 @@ This feature is experimental as of now and contributions are welcome!
 
 
 # FSD Dataset
-Coming soon by the end of March. Stay tuned!
-
 <p align="center">
   <img src="https://raw.githubusercontent.com/NVlabs/FoundationStereo/website/static/images/sdg_montage.jpg" width="800"/>
 </p>
+
+You can download the whole dataset [here](https://drive.google.com/drive/folders/1YdC2a0_KTZ9xix_HyqNMPCrClpm0-XFU?usp=sharing) (>1TB). We also provide a small [sample data](https://drive.google.com/file/d/1dJwK5x8xsaCazz5xPGJ2OKFIWrd9rQT5/view?usp=drive_link) (3GB) to peek. The whole dataset contains ~1M data points, where each consists of:
+- Left and right images
+- Ground-truth disparity
+
+You can check how to read data by using our example with the sample data:
+```
+python scripts/vis_dataset.py --dataset_path ./DATA/sample/manipulation_v5_realistic_kitchen_2500_1/dataset/data/
+```
+
+It will produce:
+<p align="center">
+  <img src="./teaser/fsd_sample.png" width="800"/>
+</p>
+
+
 
 
 # FAQ
