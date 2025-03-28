@@ -45,14 +45,11 @@ except:
             pass
 
 
-def normalize_image(img):
-    '''
-    @img: (B,C,H,W) in range 0-255, RGB order
-    '''
-    from torchvision import transforms
+# def normalize_image(img):
+#     from torchvision import transforms
 
-    tf = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
-    return tf(img/255.0).contiguous()
+#     tf = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+#     return tf(img/255.0).contiguous()
 
 
 class hourglass(nn.Module):
@@ -138,7 +135,7 @@ class hourglass(nn.Module):
 
 class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
     def __init__(self, args):
-        super().__init__()
+        super(FoundationStereo, self).__init__()
         self.args = args
 
         context_dims = args.hidden_dims
@@ -150,7 +147,10 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
         self.sam = SpatialAttentionExtractor()
         self.cam = ChannelAttentionEnhancement(self.args.hidden_dims[0])
 
-        self.context_zqr_convs = nn.ModuleList([nn.Conv2d(context_dims[i], args.hidden_dims[i]*3, kernel_size=3, padding=3//2) for i in range(self.args.n_gru_layers)])
+        self.context_zqr_convs = nn.ModuleList(
+            [nn.Conv2d(context_dims[i], args.hidden_dims[i]*3, kernel_size=3, padding=3//2)
+             for i in range(self.args.n_gru_layers)]
+        )
 
         self.feature = Feature()
         self.proj_cmb = nn.Conv2d(self.feature.d_out[0], 12, kernel_size=1, padding=0)
@@ -159,26 +159,20 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
             BasicConv_IN(3, 32, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(32, 32, 3, 1, 1, bias=False),
             nn.InstanceNorm2d(32), nn.ReLU()
-            )
+        )
         self.stem_4 = nn.Sequential(
             BasicConv_IN(32, 48, kernel_size=3, stride=2, padding=1),
             nn.Conv2d(48, 48, 3, 1, 1, bias=False),
             nn.InstanceNorm2d(48), nn.ReLU()
-            )
-
-
+        )
         self.spx_2_gru = Conv2x(32, 32, True, bn=False)
-        self.spx_gru = nn.Sequential(
-          nn.ConvTranspose2d(2*32, 9, kernel_size=4, stride=2, padding=1),
-          )
-
-
+        self.spx_gru = nn.Sequential(nn.ConvTranspose2d(2*32, 9, kernel_size=4, stride=2, padding=1))
         self.corr_stem = nn.Sequential(
             nn.Conv3d(32, volume_dim, kernel_size=1),
             BasicConv(volume_dim, volume_dim, kernel_size=3, padding=1, is_3d=True),
             ResnetBasicBlock3D(volume_dim, volume_dim, kernel_size=3, stride=1, padding=1),
             ResnetBasicBlock3D(volume_dim, volume_dim, kernel_size=3, stride=1, padding=1),
-            )
+        )
         self.corr_feature_att = FeatureAtt(volume_dim, self.feature.d_out[0])
         self.cost_agg = hourglass(cfg=self.args, in_channels=volume_dim, feat_dims=self.feature.d_out)
         self.classifier = nn.Sequential(
@@ -186,11 +180,9 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
           ResnetBasicBlock3D(volume_dim//2, volume_dim//2, kernel_size=3, stride=1, padding=1),
           nn.Conv3d(volume_dim//2, 1, kernel_size=7, padding=3),
         )
-
         r = self.args.corr_radius
         dx = torch.linspace(-r, r, 2*r+1, requires_grad=False).reshape(1, 1, 2*r+1, 1)
         self.dx = dx
-
 
     def upsample_disp(self, disp, mask_feat_4, stem_2x):
 
@@ -202,13 +194,12 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
 
         return up_disp.float()
 
-
     def forward(self, image1, image2, iters=12, flow_init=None, test_mode=False, low_memory=False, init_disp=None):
         """ Estimate disparity between pair of frames """
         B = len(image1)
         low_memory = low_memory or (self.args.get('low_memory', False))
-        image1 = normalize_image(image1)
-        image2 = normalize_image(image2)
+        # image1 = normalize_image(image1)
+        # image2 = normalize_image(image2)
         with autocast(enabled=self.args.mixed_precision):
             out, vit_feat = self.feature(torch.cat([image1, image2], dim=0))
             vit_feat = vit_feat[:B]
@@ -216,7 +207,9 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
             features_right = [o[B:] for o in out]
             stem_2x = self.stem_2(image1)
 
-            gwc_volume = build_gwc_volume(features_left[0], features_right[0], self.args.max_disp//4, self.cv_group)  # Group-wise correlation volume (B, N_group, max_disp, H, W)
+            gwc_volume = build_gwc_volume(
+                features_left[0], features_right[0], self.args.max_disp//4, self.cv_group
+            )  # Group-wise correlation volume (B, N_group, max_disp, H, W)
             left_tmp = self.proj_cmb(features_left[0])
             right_tmp = self.proj_cmb(features_right[0])
             concat_volume = build_concat_volume(left_tmp, right_tmp, maxdisp=self.args.max_disp//4)
@@ -238,9 +231,13 @@ class FoundationStereo(nn.Module, huggingface_hub.PyTorchModelHubMixin):
             inp_list = [self.cam(x) * x for x in inp_list]
             att = [self.sam(x) for x in inp_list]
 
-        geo_fn = Combined_Geo_Encoding_Volume(features_left[0].float(), features_right[0].float(), comb_volume.float(), num_levels=self.args.corr_levels, dx=self.dx)
+        geo_fn = Combined_Geo_Encoding_Volume(
+            features_left[0].float(), features_right[0].float(), comb_volume.float(), num_levels=self.args.corr_levels, dx=self.dx
+        )
         b, c, h, w = features_left[0].shape
-        coords = torch.arange(w, dtype=torch.float, device=init_disp.device).reshape(1,1,w,1).repeat(b, h, 1, 1)  # (B,H,W,1) Horizontal only
+        coords = torch.arange(
+            w, dtype=torch.float, device=init_disp.device).reshape(1,1,w,1).repeat(b, h, 1, 1
+                                                                                   )  # (B,H,W,1) Horizontal only
         disp = init_disp.float()
         disp_preds = []
 
