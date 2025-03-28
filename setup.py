@@ -21,6 +21,7 @@ setup(
     version=f'{__version__}',  # NOQA: F821
     long_description=readme,
     packages=find_packages(),
+    long_description_content_type="text/markdown",
     zip_safe=True,
     install_requires=install_requires,
     test_suite='tests',
