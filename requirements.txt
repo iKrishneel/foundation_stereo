@@ -1,0 +1,11 @@
+einops
+numpy>=1.2
+matplotlib
+opencv-python
+omegaconf
+safetensors
+igniter
+timm
+einops
+--extra-index-url https://download.pytorch.org/whl/cu118
+xformers

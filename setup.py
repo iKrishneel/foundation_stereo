@@ -9,15 +9,7 @@ except Exception:
     readme = str('')
 
 
-install_requires = [
-    'einops',
-    'numpy >= 1.2',
-    'matplotlib',
-    'opencv-python',
-    'omegaconf',
-    'safetensors',
-    'igniter',
-]
+install_requires = []
 
 
 __name__ = 'foundation_stereo'
@@ -25,8 +17,6 @@ __version__ = '0.0.1'
 
 setup(
     name=__name__,
-    author='Krishneel',
-    email='krishneel@krishneel',
     url='https://github.com/iKrishneel/foundation_stereo',
     version=f'{__version__}',  # NOQA: F821
     long_description=readme,
@@ -46,9 +36,4 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
     ],
-    # entry_points={
-    #     'console_scripts': {
-    #         'igniter=igniter.cli:main',
-    #     },
-    # }
 )

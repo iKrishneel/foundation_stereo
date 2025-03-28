@@ -5,5 +5,5 @@ weight/
 __pycache__
 DATA/*
 *~
-*.egg/*
-logs/
+logs/*
+*.egg-info/* 
