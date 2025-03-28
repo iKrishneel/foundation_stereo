@@ -1,0 +1,2 @@
+include foundation_stereo/__init__.py
+recursive-include foundation_stereo *.py
