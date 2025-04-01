@@ -30,7 +30,7 @@ class InferenceEngine(_InferenceEngine):
 
         input_shape = img_left.shape[:2]
         device = self.model.classifier[2].weight.device
-        
+
         if self.transforms is not None:
             img_left, img_right = [self.transforms(img) for img in [img_left, img_right]]
 

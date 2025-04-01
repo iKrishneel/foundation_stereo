@@ -13,7 +13,7 @@ install_requires = []
 
 
 __name__ = 'foundation_stereo'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 setup(
     name=__name__,

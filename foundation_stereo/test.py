@@ -2,6 +2,7 @@
 
 import os.path as osp
 import torch
+import numpy as np
 import cv2 as cv
 from omegaconf import OmegaConf
 import matplotlib.pyplot as plt
@@ -30,7 +31,7 @@ def main(cfg, images, weights, scale, valid_iters=32,):
     im_left = cv.imread(osp.join(images, 'left.png'))
     im_right = cv.imread(osp.join(images, 'right.png'))
 
-    disparity = engine(im_left, im_right)
+    disparity = engine(np.asarray(im_left), np.asarray(im_right))
 
     disp = disparity.cpu().numpy()
     plt.imshow(disp); plt.show()

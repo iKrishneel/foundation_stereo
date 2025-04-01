@@ -1,10 +1,12 @@
 driver: foundation_stereo
-dtype: float32
+dtype: float16
 device: cuda:0
 
 transforms:
   foundation_stereo:
     ToTensor:
+    ResizeLongestSide:
+      size: 540
     ResizeToDivisible:
       factor: 32
     Normalize:
